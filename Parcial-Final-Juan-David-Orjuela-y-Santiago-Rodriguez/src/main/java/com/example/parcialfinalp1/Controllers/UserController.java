@@ -1,22 +1,50 @@
 package com.example.parcialfinalp1.Controllers;
 
 import com.example.parcialfinalp1.Model.*;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class UserController {
     @FXML
-    private Label welcomeText;
+    private Label lblMessage;
+
+    @FXML
+    private Label lblUserRole;
+
+    @FXML
+    private Label lblUserName;
+
+    @FXML
+    private Label lblCurrentUser;
+
+    @FXML
+    private Label lblUserId;
 
     @FXML
     private AnchorPane paneTransferencia;
+
+    @FXML
+    private ComboBox<String> cmbRole;
+
+    @FXML
+    private VBox clientMenu;
+
+    @FXML
+    private VBox doctorMenu;
+
+    @FXML
+    private ComboBox<Doctor> cmbDoctorSelect;
 
     @FXML
     private Button btnAppointmen;
@@ -24,58 +52,114 @@ public class UserController {
     @FXML
     private Button btnInfo;
 
+    @FXML
+    private Button btnDoctorDashboard;
+
+    private AppData appData; // En lugar de usar Singleton
     private Client currentClient;
     private ArrayList<Doctor> availableDoctors;
+    private Doctor selectedDoctor;
 
-    @FXML
-    public void initialize() {
-        // Crear datos de ejemplo
-        createSampleData();
+    // Método para recibir los datos desde HelloApplication
+    public void setAppData(AppData appData) {
+        this.appData = appData;
+        this.currentClient = appData.getCurrentClient();
+        this.availableDoctors = appData.getDoctors();
+        initialize();
     }
 
-    private void createSampleData() {
-        // Crear cliente
-        currentClient = new Client("Juan Pérez", "12345", "juan@email.com");
+    private void initialize() {
+        // Configurar ComboBox de roles
+        cmbRole.setItems(FXCollections.observableArrayList("Cliente", "Doctor"));
+        cmbRole.setValue("Cliente");
 
-        // Crear doctores
-        availableDoctors = new ArrayList<>();
+        // Configurar ComboBox de doctores
+        cmbDoctorSelect.setItems(FXCollections.observableArrayList(availableDoctors));
 
-        Doctor doctor1 = new Doctor("Dra. María González", "DOC001", "maria@hospital.com", Speciality.CARDIOLOGIST);
-        Doctor doctor2 = new Doctor("Dr. Carlos Rodríguez", "DOC002", "carlos@hospital.com", Speciality.PEDIATRICIAN);
-        Doctor doctor3 = new Doctor("Dra. Ana Martínez", "DOC003", "ana@hospital.com", Speciality.NUTRISIONIST);
-        Doctor doctor4 = new Doctor("Dr. Luis Fernández", "DOC004", "luis@hospital.com", Speciality.PLASTIC_SURGERY);
+        // Configurar cómo se muestran los doctores en el ComboBox
+        cmbDoctorSelect.setCellFactory(param -> new ListCell<Doctor>() {
+            @Override
+            protected void updateItem(Doctor doctor, boolean empty) {
+                super.updateItem(doctor, empty);
+                if (empty || doctor == null) {
+                    setText(null);
+                } else {
+                    setText(doctor.getName() + " - " + doctor.getSpeciality());
+                }
+            }
+        });
 
-        availableDoctors.add(doctor1);
-        availableDoctors.add(doctor2);
-        availableDoctors.add(doctor3);
-        availableDoctors.add(doctor4);
+        cmbDoctorSelect.setButtonCell(new ListCell<Doctor>() {
+            @Override
+            protected void updateItem(Doctor doctor, boolean empty) {
+                super.updateItem(doctor, empty);
+                if (empty || doctor == null) {
+                    setText(null);
+                } else {
+                    setText(doctor.getName());
+                }
+            }
+        });
 
-        // Crear algunas citas de ejemplo para el cliente
-        Appointment cita1 = new Appointment("2024-12-20 10:00 AM", doctor1, currentClient);
-        Appointment cita2 = new Appointment("2024-12-25 03:00 PM", doctor2, currentClient);
+        // Seleccionar el primer doctor por defecto
+        if (!availableDoctors.isEmpty()) {
+            selectedDoctor = availableDoctors.get(0);
+            cmbDoctorSelect.setValue(selectedDoctor);
+        }
 
-        currentClient.addAppointment(cita1);
-        currentClient.addAppointment(cita2);
+        // Actualizar la información del usuario (Cliente por defecto)
+        updateUserInfo();
+    }
 
-        // Agregar citas a los doctores
-        doctor1.getAppointment().add(cita1);
-        doctor2.getAppointment().add(cita2);
+    private void updateUserInfo() {
+        String selectedRole = cmbRole.getValue();
 
-        doctor1.getClientList().add(currentClient);
-        doctor2.getClientList().add(currentClient);
+        if ("Cliente".equals(selectedRole)) {
+            lblUserRole.setText("Rol: 👤 Cliente");
+            lblUserName.setText("Usuario: " + currentClient.getName());
+            lblCurrentUser.setText("👤 " + currentClient.getName());
+            lblUserId.setText(currentClient.getId());
+            lblMessage.setText("Bienvenido, " + currentClient.getName());
+        } else if ("Doctor".equals(selectedRole) && selectedDoctor != null) {
+            lblUserRole.setText("Rol: 👨‍⚕️ Doctor");
+            lblUserName.setText("Doctor: " + selectedDoctor.getName());
+            lblCurrentUser.setText("👨‍⚕️ Dr. " + selectedDoctor.getName());
+            lblUserId.setText(selectedDoctor.getId());
+            lblMessage.setText("Bienvenido, Dr. " + selectedDoctor.getName());
+        }
+    }
 
-        // Crear algunos pacientes para los doctores
-        Client client2 = new Client("María López", "54321", "maria@email.com");
-        Client client3 = new Client("Pedro Sánchez", "98765", "pedro@email.com");
+    @FXML
+    protected void onRoleChanged() {
+        String selectedRole = cmbRole.getValue();
+        if ("Cliente".equals(selectedRole)) {
+            clientMenu.setVisible(true);
+            doctorMenu.setVisible(false);
+            updateUserInfo();
+            clearPanel();
+        } else if ("Doctor".equals(selectedRole)) {
+            clientMenu.setVisible(false);
+            doctorMenu.setVisible(true);
+            updateUserInfo();
+            clearPanel();
+        }
+    }
 
-        Appointment cita3 = new Appointment("2024-12-21 11:00 AM", doctor1, client2);
-        Appointment cita4 = new Appointment("2024-12-22 02:00 PM", doctor3, client3);
+    @FXML
+    protected void onDoctorSelected() {
+        selectedDoctor = cmbDoctorSelect.getValue();
+        updateUserInfo();
+        System.out.println("Doctor seleccionado: " + (selectedDoctor != null ? selectedDoctor.getName() : "Ninguno"));
+    }
 
-        doctor1.getAppointment().add(cita3);
-        doctor1.getClientList().add(client2);
-
-        doctor3.getAppointment().add(cita4);
-        doctor3.getClientList().add(client3);
+    @FXML
+    protected void onDoctorDashboard() {
+        if (selectedDoctor == null) {
+            System.out.println("Por favor selecciona un doctor");
+            return;
+        }
+        System.out.println("Cargando dashboard del doctor: " + selectedDoctor.getName());
+        loadDoctorDashboard();
     }
 
     @FXML
@@ -95,12 +179,11 @@ public class UserController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/parcialfinalp1/RequestAppointment.fxml"));
             Parent appointmentRoot = loader.load();
 
-            // Obtener el controlador y pasarle el cliente y los doctores disponibles
             RequestAppointmentController controller = loader.getController();
             controller.setClient(currentClient);
             controller.setAvailableDoctors(availableDoctors);
+            controller.setParentController(this);
 
-            // Limpiar el panel y agregar la vista
             paneTransferencia.getChildren().clear();
             AnchorPane.setTopAnchor(appointmentRoot, 0.0);
             AnchorPane.setBottomAnchor(appointmentRoot, 0.0);
@@ -119,11 +202,9 @@ public class UserController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/parcialfinalp1/ClientDashboard.fxml"));
             Parent dashboardRoot = loader.load();
 
-            // Obtener el controlador y pasarle el cliente
             ClientDashboardController controller = loader.getController();
-            controller.setClient(currentClient);
+            controller.setClient(currentClient); // Usar el cliente actual (ya tiene todas las citas actualizadas)
 
-            // Limpiar el panel y agregar el dashboard
             paneTransferencia.getChildren().clear();
             AnchorPane.setTopAnchor(dashboardRoot, 0.0);
             AnchorPane.setBottomAnchor(dashboardRoot, 0.0);
@@ -137,7 +218,48 @@ public class UserController {
         }
     }
 
-    // Métodos para los efectos hover
+    private void loadDoctorDashboard() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/parcialfinalp1/DoctorDashboard.fxml"));
+            Parent dashboardRoot = loader.load();
+
+            DoctorDashboardController controller = loader.getController();
+            controller.setDoctor(selectedDoctor); // El doctor ya tiene todas las citas actualizadas
+
+            paneTransferencia.getChildren().clear();
+            AnchorPane.setTopAnchor(dashboardRoot, 0.0);
+            AnchorPane.setBottomAnchor(dashboardRoot, 0.0);
+            AnchorPane.setLeftAnchor(dashboardRoot, 0.0);
+            AnchorPane.setRightAnchor(dashboardRoot, 0.0);
+            paneTransferencia.getChildren().add(dashboardRoot);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Error al cargar el dashboard del doctor: " + e.getMessage());
+        }
+    }
+
+    private void clearPanel() {
+        paneTransferencia.getChildren().clear();
+        VBox vbox = new VBox(10);
+        vbox.setAlignment(javafx.geometry.Pos.CENTER);
+        vbox.setLayoutX(100.0);
+        vbox.setLayoutY(220.0);
+
+        Label emoji = new Label("👋");
+        emoji.setStyle("-fx-font-size: 40px;");
+
+        Label message = new Label("Selecciona una opción del menú");
+        message.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
+
+        vbox.getChildren().addAll(emoji, message);
+        paneTransferencia.getChildren().add(vbox);
+    }
+
+    public void refreshClientDashboard() {
+        loadClientDashboard();
+    }
+
     @FXML
     protected void hoverOn() {
         btnAppointmen.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 12;");

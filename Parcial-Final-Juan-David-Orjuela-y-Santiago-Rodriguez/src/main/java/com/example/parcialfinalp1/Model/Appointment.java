@@ -4,6 +4,7 @@ public class Appointment {
     private String fechaCita;
     private Doctor doctor;
     private Client client;
+    private String descripcion; // Nueva propiedad
 
     public Appointment() {
     }
@@ -12,6 +13,14 @@ public class Appointment {
         this.fechaCita = fechaCita;
         this.doctor = doctor;
         this.client = client;
+        this.descripcion = "";
+    }
+
+    public Appointment(String fechaCita, Doctor doctor, Client client, String descripcion) {
+        this.fechaCita = fechaCita;
+        this.doctor = doctor;
+        this.client = client;
+        this.descripcion = descripcion;
     }
 
     public String getFechaCita() {
@@ -38,12 +47,21 @@ public class Appointment {
         this.client = client;
     }
 
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
     @Override
     public String toString() {
         return "Appointment{" +
                 "fechaCita='" + fechaCita + '\'' +
                 ", doctor=" + doctor +
                 ", client=" + client +
+                ", descripcion='" + descripcion + '\'' +
                 '}';
     }
 }

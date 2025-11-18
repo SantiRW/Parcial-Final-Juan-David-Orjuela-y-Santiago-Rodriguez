@@ -69,7 +69,25 @@ public class ClientDashboardController {
                             (appointment.getDoctor() != null ? appointment.getDoctor().getEmail() : "N/A"));
                     lblEmail.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 12px;");
 
-                    vbox.getChildren().addAll(lblFecha, lblDoctor, lblEspecialidad, lblEmail);
+                    // NUEVA SECCIÓN: Mostrar descripción
+                    VBox descriptionBox = new VBox(3);
+                    descriptionBox.setStyle("-fx-background-color: #e8f5e9; -fx-background-radius: 5; -fx-padding: 8; -fx-border-color: #4caf50; -fx-border-radius: 5; -fx-border-width: 1;");
+
+                    Label lblDescTitle = new Label("📋 Motivo de Consulta:");
+                    lblDescTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #2e7d32;");
+
+                    String descripcionText = appointment.getDescripcion() != null && !appointment.getDescripcion().isEmpty()
+                            ? appointment.getDescripcion()
+                            : "Sin descripción";
+
+                    Label lblDesc = new Label(descripcionText);
+                    lblDesc.setStyle("-fx-text-fill: #1b5e20; -fx-font-size: 12px; -fx-wrap-text: true;");
+                    lblDesc.setWrapText(true);
+                    lblDesc.setMaxWidth(320);
+
+                    descriptionBox.getChildren().addAll(lblDescTitle, lblDesc);
+
+                    vbox.getChildren().addAll(lblFecha, lblDoctor, lblEspecialidad, lblEmail, descriptionBox);
                     setGraphic(vbox);
                 }
             }

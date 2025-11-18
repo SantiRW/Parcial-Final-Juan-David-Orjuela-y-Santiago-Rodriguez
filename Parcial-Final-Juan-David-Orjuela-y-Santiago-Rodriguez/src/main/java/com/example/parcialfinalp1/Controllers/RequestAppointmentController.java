@@ -28,6 +28,7 @@ public class RequestAppointmentController {
 
     private Client currentClient;
     private ArrayList<Doctor> availableDoctors;
+    private UserController parentController;
 
     @FXML
     public void initialize() {
@@ -72,6 +73,10 @@ public class RequestAppointmentController {
         cmbDoctors.setItems(FXCollections.observableArrayList(doctors));
     }
 
+    public void setParentController(UserController controller) {
+        this.parentController = controller;
+    }
+
     @FXML
     private void onSubmit() {
         // Validar campos
@@ -94,16 +99,16 @@ public class RequestAppointmentController {
         Doctor selectedDoctor = cmbDoctors.getValue();
         LocalDate date = datePicker.getValue();
         String time = cmbTime.getValue();
+        String descripcion = txtReason.getText().trim();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String appointmentDate = date.format(formatter) + " " + time;
 
-        Appointment newAppointment = new Appointment(appointmentDate, selectedDoctor, currentClient);
+        // Crear cita CON descripción
+        Appointment newAppointment = new Appointment(appointmentDate, selectedDoctor, currentClient, descripcion);
 
-        // Agregar la cita al cliente
-        if (currentClient != null) {
-            currentClient.addAppointment(newAppointment);
-        }
+        // Agregar la cita al cliente (ya está conectado con el UserController)
+        currentClient.addAppointment(newAppointment);
 
         // Agregar la cita al doctor
         selectedDoctor.getAppointment().add(newAppointment);
@@ -113,12 +118,11 @@ public class RequestAppointmentController {
             selectedDoctor.getClientList().add(currentClient);
         }
 
-        showMessage("¡Cita solicitada exitosamente!", true);
+        showMessage("¡Cita solicitada exitosamente! Haz clic en 'Ver Mis Citas' para verla.", true);
 
         // Limpiar formulario
         clearForm();
     }
-
     @FXML
     private void onCancel() {
         clearForm();
